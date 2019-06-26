@@ -11,25 +11,54 @@
 
 /* RFC: TODO iterate through available disk and partitions */
 
-/* These should be on commandline, environment variable and/or config file */
-char *ip = (char*)"192.168.0.10"; // IP of your camera
-char *user = (char*)"admin"; // username for camera (read access required)
-char *password = (char*)"xxxxxx"; // password for camera
+char *ip = getenv("IPCAMERA_TARGET");         // IP of your camera
+char *user = getenv("IPCAMERA_USERNAME");     // username for camera (read access required)
+char *password = getenv("IPCAMERA_PASSWORD"); // password for camera
+int port = getenv("IPCAMERA_PORT") ? atoi(getenv("IPCAMERA_PORT")) : 34567;
 
 long g_LoginID=0;
 //#define INCLUDE_NAT
 
 int  main(int argc,char *argv[])
 {
+
+        /* RFC: get options */
+        int c;
+        while ((c =getopt(argc,argv,"u:p:t:P:")) != -1) {
+                switch(c) {
+                        case 'u':
+                                user = optarg;
+                                break;
+                        case 'p':
+                                password = optarg;
+                                break;
+                        case 't':
+                                ip = optarg;
+                                break;
+                        case 'P':
+                                port = atoi(optarg);
+                                break;
+                        default:
+                                exit(1);
+
+                }
+        }
+
 	H264_DVR_Init(NULL,0);
-	printf("H264_DVR_Init\n");
+	fprintf(stderr,"H264_DVR_Init\n");
 
 	H264_DVR_DEVICEINFO OutDev;	
 	memset(&OutDev,0,sizeof(OutDev));
 	int nError = 0;
-	g_LoginID = H264_DVR_Login(ip, 34567, user, password,(LPH264_DVR_DEVICEINFO)(&OutDev),&nError);	
-	printf("g_LoginID=%d,nError:%d\n",g_LoginID,nError);
+	g_LoginID = H264_DVR_Login(ip, port, user, password,(LPH264_DVR_DEVICEINFO)(&OutDev),&nError);
+	fprintf(stderr,"g_LoginID=%d,nError:%d\n",g_LoginID,nError);
 	
+        if(g_LoginID == 0) {
+                fprintf(stderr,"Error with login, error code is %d\n",nError);
+                H264_DVR_Cleanup();
+                exit(1);
+        }
+
 	SDK_StorageDeviceInformationAll diskinfo;
 	DWORD dwRetLen = 0;
 	int nWaitTime= 10000;
@@ -39,10 +68,10 @@ int  main(int argc,char *argv[])
 	if(g_LoginID>0)
 	{
 		H264_DVR_Logout(g_LoginID);
-		printf("Logout success!!!\n");
+		fprintf(stderr,"Logout success!!!\n");
 	}
 	H264_DVR_Cleanup();
-	printf("H264_DVR_Cleanup\n");
+	fprintf(stderr,"H264_DVR_Cleanup\n");
 
 	return 0;
 }
