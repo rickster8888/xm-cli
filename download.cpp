@@ -1,4 +1,5 @@
 ﻿#include <stdio.h>
+#include <stdlib.h>
 #include <memory.h>
 #include <unistd.h>
 #include <iostream>
@@ -12,11 +13,10 @@
 // RFC: No docs on how to disable verbose debugging. 
 // RFC: based on demo code.. this is a mainly C with some C++ constructs.
 
-
-/* These should be on commandline, environment variable and/or config file */
-char *ip = (char*)"192.168.0.10"; // IP of your camera
-char *user = (char*)"admin"; // username for camera (read access required)
-char *password = (char*)"xxxxxx"; // password for camera
+char *ip = getenv("IPCAMERA_TARGET");         // IP of your camera
+char *user = getenv("IPCAMERA_USERNAME");     // username for camera (read access required)
+char *password = getenv("IPCAMERA_PASSWORD"); // password for camera
+int port = getenv("IPCAMERA_PORT") ? atoi(getenv("IPCAMERA_PORT")) : 34567;
 
 /* Globals! Eek */
 int rv;
@@ -44,7 +44,7 @@ int  main(int argc,char *argv[])
 	char *dl = NULL;
 	char *date = NULL;
 	char *end = NULL;
-	while ((c =getopt(argc,argv,"l:d:e:ski:")) != -1) {
+	while ((c =getopt(argc,argv,"l:d:e:ski:u:p:t:P:")) != -1) {
 		switch(c) {
 			case 'i':
 				limit = atoi(optarg);
@@ -63,6 +63,18 @@ int  main(int argc,char *argv[])
 				break;
 			case 'e':
 				end = optarg;	
+				break;
+			case 'u':
+				user = optarg;
+				break;
+			case 'p':
+				password = optarg;
+				break;
+			case 't':
+				ip = optarg;
+				break;
+			case 'P':
+				port = atoi(optarg);
 				break;
 			default:
 				exit(1);
@@ -116,9 +128,15 @@ int  main(int argc,char *argv[])
 	H264_DVR_DEVICEINFO OutDev;	
 	memset(&OutDev,0,sizeof(OutDev));
 	int nError = 0;
-	g_LoginID = H264_DVR_Login(ip, 34567, user, password,(LPH264_DVR_DEVICEINFO)(&OutDev),&nError);	
+	g_LoginID = H264_DVR_Login(ip, port, user, password,(LPH264_DVR_DEVICEINFO)(&OutDev),&nError);	
 	printf("g_LoginID=%d,nError:%d\n",g_LoginID,nError);
 	
+	if(g_LoginID == 0) {
+		fprintf(stderr,"Error with login, error code is %d\n",nError);
+		H264_DVR_Cleanup();
+		exit(1);
+	}
+
 	H264_DVR_FINDINFO findInfo;
 	findInfo.nChannelN0=0;
 	findInfo.nFileType=0;
