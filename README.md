@@ -2,6 +2,19 @@
 
 A CLI using XM netsdk toolkit for IP Cameras based on XM (such as Lutec)
 
+# Build
+
+## pre-requisites
+
+* Linux XM netsdk libraries (https://download.xm030.cn/d/MDAwMDA3MzM=)
+
+## notes
+
+In my builds, the include path for netsdk.h is in ../include and for libxmnetsdk.so is in ../x64.
+
+If you are using 32 bit linux OS, then use the x86 version of the library.  I haven't test that but there
+should be no reason why it shouldn't work.
+
 # Tools
 
 ## ipcamera-download
@@ -30,4 +43,4 @@ smar, SMTSEC, SSICON, SUNBA, Sunivision, Susikum, TECBOX, Techage, Techege, Tian
 unitoptek, USAFEQLO, VOLDRELI, Westmile, Westshine, Wistino, Witrue, WNK Security Technology, WOFEA, WOSHIJIA, WUSONLUSAN, 
 XIAO MA, XinAnX, xloongx, YiiSPO, YUCHENG, YUNSYE, zclever, zilnk, ZJUXIN, zmodo, and ZRHUNTER.
 
-I am unable to verify any of the above!
+I am unable to verify any of the above (except LUTEC).
