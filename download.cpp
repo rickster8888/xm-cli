@@ -28,11 +28,32 @@ void TestCallBack( long a, long b, long c, long d)
 {
 	rv = c;
 	cplayid = a;
-	printf("\rProgress %d,%d,%d,%d",a,b,c,d);
+	printf("\rProgress %ld,%ld,%ld,%ld",a,b,c,d);
 }
 
 long g_LoginID=0;
 //#define INCLUDE_NAT
+
+void usage(char *name) {
+        fprintf(stderr,"Usage: %s [-h] [-u <username>] [-p <password>] [-t <ip address>] [-P <port>] -l <directory> -d <start date> [-s] [-k] [-e <end date>] [-i <limit>]\n\
+-h : help page (this page)\n\
+-u : username to use (if not set env IPCAMERA_USERNAME is used)\n\
+-p : password to use (if not set env IPCAMERA_PASSWORD is used)\n\
+-t : IP address to use (if not set env IPCAMERA_TARGET is used)\n\
+-P : Port to use (if not set env IPCAMERA_PORT is used, if not set too, default port 34567 is used)\n\
+-l : directory to save the files, sub directories are automatically created in YYYY/MM/DD format\n\
+-d : Start date can be in YYYY-MM-DD format, or key words 'today' or 'yesterday'\n\
+-s : Scan only, no changes made\n\
+-k : Keep existing, by default it will re-download and override existing files, use this option to prevent this\n\
+-e : End date, the format is same as Start date.  If not provided it will find all files after start date.\n\
+-i : limit how many new downloads are made before existing, by default there is no limit.\n\
+\n\
+Use environmental variables if you don't want the password/username/target to appear in the processlist.\n\
+\n\
+For more flexible dates, used the system date command for example -d $(date -d 'last month' +%%Y-%%m-%%d)\n\
+to use the start date as the date 1 month ago.\n",name);
+        exit(0);
+}
 
 int  main(int argc,char *argv[])
 {
@@ -44,8 +65,11 @@ int  main(int argc,char *argv[])
 	char *dl = NULL;
 	char *date = NULL;
 	char *end = NULL;
-	while ((c =getopt(argc,argv,"l:d:e:ski:u:p:t:P:")) != -1) {
+	while ((c =getopt(argc,argv,"hl:d:e:ski:u:p:t:P:")) != -1) {
 		switch(c) {
+			case 'h':
+				usage(argv[0]);
+				break;
 			case 'i':
 				limit = atoi(optarg);
 				break;
@@ -82,13 +106,19 @@ int  main(int argc,char *argv[])
 		}
         }
 
+	/* check we have enough arguments to use */
+	if (!user || !password || !ip) {
+		fprintf(stderr,"Not enough information to connect to camera, see %s -h , for more information\n",argv[0]);
+		exit(1);
+	}
+
 	if(limit <1) {
 		printf("Invalid limit value (%d) provided\n",limit);
 		exit(1);
 	}
 
 	if(!dl || !date) {
-		printf("No details provided\n");
+		printf("No start date or download directory provided\n");
 		exit(1);
 	}
 	printf("Download directory is %s for the date %s\n",dl,date);
@@ -129,7 +159,7 @@ int  main(int argc,char *argv[])
 	memset(&OutDev,0,sizeof(OutDev));
 	int nError = 0;
 	g_LoginID = H264_DVR_Login(ip, port, user, password,(LPH264_DVR_DEVICEINFO)(&OutDev),&nError);	
-	printf("g_LoginID=%d,nError:%d\n",g_LoginID,nError);
+	printf("g_LoginID=%ld,nError:%d\n",g_LoginID,nError);
 	
 	if(g_LoginID == 0) {
 		fprintf(stderr,"Error with login, error code is %d\n",nError);
@@ -235,7 +265,7 @@ int  main(int argc,char *argv[])
 				printf("day=%s,path=%s\n",day,path);
 				char fname[1024], tmp_fname[1024]; // tmp name
 
-				if(sscanf(day,"%4s-%2s-%2s",&yyyy,&mm,&dd) == 3) {
+				if(sscanf(day,"%4s-%2s-%2s",(char*)&yyyy,(char*)&mm,(char*)&dd) == 3) {
 					/* TDOO: only mkdir if dir doesn't exist */
 					snprintf(fname,sizeof(fname)-1,"%s/%s",dl,yyyy);
 					mkdir(fname,0777);
@@ -278,7 +308,7 @@ int  main(int argc,char *argv[])
 						sleep(1);
 					}
 					if(cplayid) {
-						printf("\nStop Get %d\n",cplayid);
+						printf("\nStop Get %ld\n",cplayid);
 						H264_DVR_StopGetFile(cplayid);
 					}
 					printf("success\n");
