@@ -43,10 +43,10 @@ void usage(char *name) {
 -P : Port to use (if not set env IPCAMERA_PORT is used, if not set too, default port 34567 is used)\n\
 -l : directory to save the files, sub directories are automatically created in YYYY/MM/DD format\n\
 -d : Start date can be in YYYY-MM-DD format, or key words 'today' or 'yesterday'\n\
--s : Scan only, no changes made\n\
+-s : Scan only, no changes made (will obey -k for what would be downloaded or not)\n\
 -k : Keep existing, by default it will re-download and override existing files, use this option to prevent this\n\
--e : End date, the format is same as Start date.  If not provided it will find all files after start date.\n\
--i : limit how many new downloads are made before existing, by default there is no limit.\n\
+-e : End date, the format is same as Start date.  If not provided it will find files on start date only (1 day).\n\
+-i : limit how many new downloads are made before existing, by default the limit is 64.\n\
 \n\
 Use environmental variables if you don't want the password/username/target to appear in the processlist.\n\
 \n\
@@ -267,12 +267,15 @@ int  main(int argc,char *argv[])
 
 				if(sscanf(day,"%4s-%2s-%2s",(char*)&yyyy,(char*)&mm,(char*)&dd) == 3) {
 					/* TDOO: only mkdir if dir doesn't exist */
-					snprintf(fname,sizeof(fname)-1,"%s/%s",dl,yyyy);
-					mkdir(fname,0777);
-					snprintf(fname,sizeof(fname)-1,"%s/%s/%s",dl,yyyy,mm);
-					mkdir(fname,0777);
-					snprintf(fname,sizeof(fname)-1,"%s/%s/%s/%s",dl,yyyy,mm,dd);
-					mkdir(fname,0777);
+					/* Don't create directory in scanonly mode */
+					if(!scanonly) {
+						snprintf(fname,sizeof(fname)-1,"%s/%s",dl,yyyy);
+						mkdir(fname,0777);
+						snprintf(fname,sizeof(fname)-1,"%s/%s/%s",dl,yyyy,mm);
+						mkdir(fname,0777);
+						snprintf(fname,sizeof(fname)-1,"%s/%s/%s/%s",dl,yyyy,mm,dd);
+						mkdir(fname,0777);
+					}
 					snprintf(fname,sizeof(fname)-1,"%s/%s/%s/%s/%s-%s",dl,yyyy,mm,dd,day,path);
 					snprintf(tmp_fname,sizeof(tmp_fname)-1,"%s/%s/%s/%s/.ipcamera-%s-%s.tmp",dl,yyyy,mm,dd,day,path);
 				} else {
@@ -282,11 +285,6 @@ int  main(int argc,char *argv[])
 				printf("filename is %s to %s (size=%d)\n",pData[i].sFileName,fname,pData[i].size);
 				//printf("tmp file is %s\n",tmp_fname);
 	
-				if(scanonly) {
-					processed++;
-					continue; // don't download
-       	                 	}
-
 				if(keepexisting) {
 					if(stat(fname,&sb)==0) {
 						if(S_ISREG(sb.st_mode)) {
@@ -295,6 +293,12 @@ int  main(int argc,char *argv[])
 							continue;
 						}
 					}
+				}
+
+				if(scanonly) {
+					processed++;
+					downloaded++;
+					continue; // don't download
 				}
 
 				rv = 0;
@@ -356,7 +360,11 @@ int  main(int argc,char *argv[])
 	}
 	
 	printf("Processed: %d\n",processed);
-	printf("New downloads: %d\n",downloaded);
+	if(scanonly) {
+		printf("New items to download: %d\n",downloaded);
+	} else {
+		printf("New downloads: %d\n",downloaded);
+	}
 	if(g_LoginID>0)
 	{
 		H264_DVR_Logout(g_LoginID);
