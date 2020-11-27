@@ -69,15 +69,24 @@ int  main(int argc,char *argv[])
 	printf("TimeZone: %d\n",ntpconfig.TimeZone);
 	printf("Debug:%s|%d\n",ntpconfig.Server.ServerName, ntpconfig.Server.ip.l);
 
- 	// Hack it
-	strcpy(ntpconfig.Server.ServerName,"ntp1.isp.sky.com");
-	ntpconfig.Server.ip.c[0] = 90;
-	ntpconfig.Server.ip.c[1] = 207;
-	ntpconfig.Server.ip.c[2] = 238;
-	ntpconfig.Server.ip.c[3] = 105;
+	// Hack it - try IP only
+	strcpy(ntpconfig.Server.ServerName,"");
+	ntpconfig.Server.ip.c[0] = 192;
+	ntpconfig.Server.ip.c[1] = 168;
+	ntpconfig.Server.ip.c[2] = 0;
+	ntpconfig.Server.ip.c[3] = 8;
+	ntpconfig.TimeZone = 1; /* BST */
+	ntpconfig.Enable = 1;
+	ntpconfig.UpdatePeriod = 60; /* try 60s */
 
         printf("TimeZone: %d\n",ntpconfig.TimeZone);
         printf("Debug:%s|%d\n",ntpconfig.Server.ServerName, ntpconfig.Server.ip.l);
+
+	/* Apply it */
+//	fprintf(stderr,"Set code is %d\n",
+//          H264_DVR_SetDevConfig(g_LoginID,E_SDK_CONFIG_NET_NTP,0,(char*)&ntpconfig,sizeof(SDK_NetNTPConfig),nWaitTime)
+//        );
+
 
 	/* DNS check */
 	SDK_NetDNSConfig dnsconfig;
