@@ -82,6 +82,14 @@ int  main(int argc,char *argv[])
 	DWORD dwRetLen = 0;
 	int nWaitTime= 10000;
 	H264_DVR_GetDevConfig(g_LoginID,E_SDK_CONFIG_DISK_INFO,0,(char*)&diskinfo,sizeof(SDK_StorageDeviceInformationAll),&dwRetLen,nWaitTime);
+
+
+	SDK_AbilitySerialNo serialCfg;
+        unsigned long lRetu;
+        H264_DVR_GetDevConfig(g_LoginID, E_SDK_CONFIG_ABILITY_SERIALNO, -1,(char*)&serialCfg,sizeof(serialCfg),&lRetu,5000 );
+
+	printf("Serial Num: %s | %s\n",serialCfg.serialNo,serialCfg.productType);
+
   	printf("Total Space: %d\n",diskinfo.vStorageDeviceInfoAll[0].diPartitions[0].uiTotalSpace);
 	printf("Remain Space: %d\n",diskinfo.vStorageDeviceInfoAll[0].diPartitions[0].uiRemainSpace);
 	if(g_LoginID>0)

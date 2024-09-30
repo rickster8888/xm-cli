@@ -35,7 +35,7 @@ long g_LoginID=0;
 //#define INCLUDE_NAT
 
 void usage(char *name) {
-        fprintf(stderr,"Usage: %s [-h] [-u <username>] [-p <password>] [-t <ip address>] [-P <port>] -l <directory> -d <start date> [-s] [-k] [-e <end date>] [-i <limit>]\n\
+        fprintf(stderr,"Usage: %s [-h] [-u <username>] [-p <password>] [-t <ip address>] [-P <port>] -l <directory> -d <start date> [-s] [-k] [-e <end date>] [-i <limit>] [-I <size in MB over to ignore>]\n\
 -h : help page (this page)\n\
 -u : username to use (if not set env IPCAMERA_USERNAME is used)\n\
 -p : password to use (if not set env IPCAMERA_PASSWORD is used)\n\
@@ -47,6 +47,7 @@ void usage(char *name) {
 -k : Keep existing, by default it will re-download and override existing files, use this option to prevent this\n\
 -e : End date, the format is same as Start date.  If not provided it will find files on start date only (1 day).\n\
 -i : limit how many new downloads are made before existing, by default the limit is 64.\n\
+-I : size in MB, to ignore downloading\n\
 \n\
 Use environmental variables if you don't want the password/username/target to appear in the processlist.\n\
 \n\
@@ -62,16 +63,20 @@ int  main(int argc,char *argv[])
 	int scanonly = 0;
 	int keepexisting = 0;
 	int limit = 64;
+	int ignore = 0;
 	char *dl = NULL;
 	char *date = NULL;
 	char *end = NULL;
-	while ((c =getopt(argc,argv,"hl:d:e:ski:u:p:t:P:")) != -1) {
+	while ((c =getopt(argc,argv,"hl:d:e:ski:u:p:t:P:I:")) != -1) {
 		switch(c) {
 			case 'h':
 				usage(argv[0]);
 				break;
 			case 'i':
 				limit = atoi(optarg);
+				break;
+			case 'I':
+				ignore = atoi(optarg);
 				break;
 			case 'l':
 				dl = optarg;
@@ -284,6 +289,13 @@ int  main(int argc,char *argv[])
 				}
 				printf("filename is %s to %s (size=%d)\n",pData[i].sFileName,fname,pData[i].size);
 				//printf("tmp file is %s\n",tmp_fname);
+
+				// ignore files too big if specified
+				if(ignore && fname,pData[i].size > (ignore * 1024)) {
+					printf("file too big, ignoring\n");
+					processed++;
+					continue;
+				}
 	
 				if(keepexisting) {
 					if(stat(fname,&sb)==0) {
