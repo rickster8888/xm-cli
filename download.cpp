@@ -291,7 +291,7 @@ int  main(int argc,char *argv[])
 				//printf("tmp file is %s\n",tmp_fname);
 
 				// ignore files too big if specified
-				if(ignore && fname,pData[i].size > (ignore * 1024)) {
+				if(ignore && (fname,pData[i].size > (ignore * 1024))) {
 					printf("file too big, ignoring\n");
 					processed++;
 					continue;
